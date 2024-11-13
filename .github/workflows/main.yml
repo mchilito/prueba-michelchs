@@ -63,4 +63,4 @@ jobs:
       - name: Actualizando el deployment en nuestro cluster
         run: |
           kubectl set image deployment/deployment-nodejs nodejs=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -n default
-          kubectl rollout status deployment/deployment-nodejs -n default
+          kubectl rollout restart deployment/deployment-nodejs -n default
