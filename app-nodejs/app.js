@@ -3,7 +3,7 @@
  const port = 3000;
 
  app.get('/', (req, res) => {
-   res.send('¡Esto es una prueba!');
+   res.send('Plantilla actualizada desde GitHub');
    });
 
    app.listen(port, () => {
