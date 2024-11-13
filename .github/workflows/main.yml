@@ -9,7 +9,6 @@ env:
   AWS_REGION: us-east-1
   ECR_REGISTRY: 066844140203.dkr.ecr.us-east-1.amazonaws.com
   ECR_REPOSITORY: michelchilito
-  IMAGE_TAG: latest
 
 jobs:
   build:
@@ -26,6 +25,10 @@ jobs:
 
       - name: Instalando dependencias
         run: npm install --prefix app-nodejs
+
+      - name: Crear artefacto de la etiqueta de imagen
+        id: get_commit
+        run: echo "IMAGE_TAG=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
 
   test:
     runs-on: ubuntu-latest
@@ -53,12 +56,12 @@ jobs:
 
       - name: Construyendo la imagen
         run: |
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build -t $ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
+          docker tag $ECR_REPOSITORY:${{ env.IMAGE_TAG }} $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}
 
       - name: Subiendo la imagen a Amazon ECR
         run: |
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}
           
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -76,5 +79,5 @@ jobs:
 
       - name: Actualizando el deployment en Kubernetes
         run: |
-          kubectl set image deployment/deployment-nodejs frontend-listo=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -n default
+          kubectl set image deployment/deployment-nodejs frontend-listo=$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} -n default
           kubectl rollout status deployment/deployment-nodejs -n default
