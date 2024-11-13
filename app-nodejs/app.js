@@ -3,7 +3,7 @@
  const port = 3000;
 
  app.get('/', (req, res) => {
-   res.send('¡Hola desde tu aplicación Node.js dockerizada y adminstrada por EKS!');
+   res.send('¡Esto es una prueba!');
    });
 
    app.listen(port, () => {
