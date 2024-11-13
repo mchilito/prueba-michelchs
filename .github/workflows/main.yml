@@ -25,7 +25,7 @@ jobs:
           node-version: '16'
 
       - name: Instalando dependencias
-        run: npm install
+        run: npm install --prefix app-nodejs
 
   test:
     runs-on: ubuntu-latest
