@@ -3,7 +3,7 @@
  const port = 3000;
 
  app.get('/', (req, res) => {
-   res.send('Plantilla actualizada desde GitHub');
+   res.send('Aplicando un cambio desde Github Actions');
    });
 
    app.listen(port, () => {
