@@ -1,0 +1,73 @@
+name: Automatizacion usando Github-Actions
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 066844140203.dkr.ecr.us-east-1.amazonaws.com
+  ECR_REPOSITORY: michelchilito
+  IMAGE_TAG: latest
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validando el codigo
+        uses: actions/checkout@v2
+
+      - name: Configuracion de nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Instalando dependencias
+        run: npm install
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run tests
+        run: echo "No tests configured"
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Login en ECR
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+      - name: Construyendo la imagen
+        run: |
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Subiendo la imagen a Amazon ECR
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          
+      - name: Configure kubectl
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_DATA" | base64 --decode > ~/.kube/config
+
+      - name: Actualizando el deployment en Kubernetes
+        run: |
+          kubectl set image deployment/deployment-nodejs frontend-listo=$ECR_REGISTRY
